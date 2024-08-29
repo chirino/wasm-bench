@@ -1,0 +1,1 @@
+Based on https://github.com/world-wide-wasm/chicory-starter-kit
