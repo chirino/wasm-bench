@@ -12,12 +12,24 @@
         <uberjar.name>benchmarks</uberjar.name>
         <exec.mainClass>garden.bots.starter.Main</exec.mainClass>
         <graalvm.polyglot.version>24.0.2</graalvm.polyglot.version>
-        <chicory.version>0.0.12</chicory.version>
+        <chicory.version>1.0.0-M1</chicory.version>
         <jmh.version>1.37</jmh.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+      <dependencyManagement>
+        <dependencies>
+        <dependency>
+            <groupId>com.dylibso.chicory</groupId>
+            <artifactId>bom</artifactId>
+            <version>${chicory.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- GraalWasm -->
@@ -36,24 +48,23 @@
         <!-- Chicory -->
         <dependency>
             <groupId>com.dylibso.chicory</groupId>
+            <artifactId>aot-experimental</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.dylibso.chicory</groupId>
             <artifactId>runtime</artifactId>
-            <version>${chicory.version}</version>
         </dependency>
         <dependency>
             <groupId>com.dylibso.chicory</groupId>
             <artifactId>wasi</artifactId>
-            <version>${chicory.version}</version>
         </dependency>
         <dependency>
             <groupId>com.dylibso.chicory</groupId>
             <artifactId>log</artifactId>
-            <version>${chicory.version}</version>
         </dependency>
-        <!-- Chicory -->
         <dependency>
             <groupId>com.dylibso.chicory</groupId>
             <artifactId>wasm</artifactId>
-            <version>${chicory.version}</version>
         </dependency>
         
         <!-- JMH -->
@@ -72,6 +83,23 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>com.dylibso.chicory</groupId>
+        <artifactId>aot-maven-plugin-experimental</artifactId>
+        <executions>
+          <execution>
+            <id>demo-plugin</id>
+            <goals>
+              <goal>wasm-aot-gen</goal>
+            </goals>
+            <configuration>
+              <name>org.graalvm.benchmark.Demo</name>
+              <wasmFile>demo-plugin/demo.wasm</wasmFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
