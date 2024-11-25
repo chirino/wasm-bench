@@ -41,3 +41,6 @@ build/
 dependency-reduced-pom.xml
 
 .idea/
+hello.wasm
+bench.wasm
+test-image.png

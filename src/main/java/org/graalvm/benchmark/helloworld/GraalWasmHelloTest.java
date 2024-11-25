@@ -1,8 +1,17 @@
-package org.graalvm.benchmark;
+/*
+ * Copyright (c) 2024, Oracle and/or its affiliates.
+ *
+ * Licensed under the Universal Permissive License v 1.0 as shown at https://opensource.org/license/UPL.
+ */
+
+ package org.graalvm.benchmark.helloworld;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Source;
+import org.graalvm.polyglot.Value;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -17,34 +26,29 @@ import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
-import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.Source;
-import org.graalvm.polyglot.Value;
-import org.graalvm.polyglot.io.ByteSequence;
-
 
 @Warmup(iterations = 3)
 @Measurement(iterations = 3)
-@BenchmarkMode(Mode.AverageTime)
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@BenchmarkMode(Mode.Throughput)
+@OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)
-public class GraalWasmTest {
+public class GraalWasmHelloTest {
 
-    @State(Scope.Thread)
-    public static class GraalWasmFixture extends WasmTestFixture {
+    @State(Scope.Benchmark)
+    public static class GraalWasmFixture {
         public Value instance;
         public Context context;
 
         @Setup(Level.Trial)
         public void doSetup() throws IOException {
-            super.doSetup();
-             final Context.Builder contextBuilder = Context.newBuilder("wasm");
+            final Context.Builder contextBuilder = Context.newBuilder("wasm");
             contextBuilder.option("wasm.Builtins", "wasi_snapshot_preview1");
             context = contextBuilder.build();
-            final Source.Builder sourceBuilder = Source.newBuilder("wasm", ByteSequence.create(this.wasmBytes), "demo");
-            final Source source = sourceBuilder.build();
+            final Source source = Source.newBuilder("wasm", GraalWasmFixture.class.getResource(HelloTestParams.WASM_FILENAME))
+                .name("hello")
+                .build();          
             context.eval(source);
-            instance = context.getBindings("wasm").getMember("demo");
+            instance = context.getBindings("wasm").getMember("hello");
         }
 
         @TearDown(Level.Trial)
@@ -54,20 +58,24 @@ public class GraalWasmTest {
     }
 
     @Benchmark
+    /*
+     * Tests a simple HelloWorld Go function, including all of the calls necessary to obtain
+     * required functions.
+     */
     public void graalWasmTest(GraalWasmFixture fixture, Blackhole blackhole) throws IOException {
         // automatically exported by TinyGo
         final Value malloc = fixture.instance.getMember("malloc");
         final Value free = fixture.instance.getMember("free");
-        final Value wasmFunc = fixture.instance.getMember(fixture.wasmFunctionName);
+        final Value wasmFunc = fixture.instance.getMember(HelloTestParams.WASM_FUNCTION);
         final Value memory = fixture.instance.getMember("memory");
 
         // allocate {fixture.paramLen} bytes of memory, this returns a pointer to that memory
-        final int ptr = malloc.execute(fixture.paramLen).asInt();
+        final int ptr = malloc.execute(HelloTestParams.paramLen).asInt();
         // write the message to the module's memory
-        writeString(memory, ptr, fixture.paramBytes);
+        writeString(memory, ptr, HelloTestParams.paramBytes);
 
         // call the wasm function
-        final Value result = wasmFunc.execute(ptr, fixture.paramLen);
+        final Value result = wasmFunc.execute(ptr, HelloTestParams.paramLen);
         // free input string memory
         free.executeVoid(ptr);
 

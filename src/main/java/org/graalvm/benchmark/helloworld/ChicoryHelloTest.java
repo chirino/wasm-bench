@@ -1,4 +1,10 @@
-package org.graalvm.benchmark;
+/*
+ * Copyright (c) 2024, Oracle and/or its affiliates.
+ *
+ * Licensed under the Universal Permissive License v 1.0 as shown at https://opensource.org/license/UPL.
+ */
+
+ package org.graalvm.benchmark.helloworld;
 
 import com.dylibso.chicory.experimental.aot.AotMachine;
 import com.dylibso.chicory.log.SystemLogger;
@@ -9,36 +15,26 @@ import com.dylibso.chicory.runtime.Memory;
 import com.dylibso.chicory.wasi.WasiOptions;
 import com.dylibso.chicory.wasi.WasiPreview1;
 import com.dylibso.chicory.wasm.Parser;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Level;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Param;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.TearDown;
-import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
 @Warmup(iterations = 3)
 @Measurement(iterations = 3)
-@BenchmarkMode(Mode.AverageTime)
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@BenchmarkMode(Mode.Throughput)
+@OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)
-public class ChicoryTest {
+  
+public class ChicoryHelloTest {
     private static final String INTERPRETER = "interpreter";
     private static final String RUNTIME_AOT = "runtime-aot";
     private static final String PRECOMPILED_AOT = "precompiled-aot";
 
-    @State(Scope.Thread)
-    public static class ChicoryFixture extends WasmTestFixture {
+    @State(Scope.Benchmark)
+    public static class ChicoryFixture {
         public WasiPreview1 wasi;
         public Instance instance;
 
@@ -51,13 +47,13 @@ public class ChicoryTest {
 
         @Setup(Level.Trial)
         public void doSetup() throws IOException {
-            super.doSetup();
             final var logger = new SystemLogger();
             // create our instance of wasip1
             wasi = new WasiPreview1(logger, WasiOptions.builder().build());
             final var imports = ImportValues.builder().addFunction(wasi.toHostFunctions()).build();
             // create the module and instantiate (the module) and connect our imports
-            var instanceBuilder = Instance.builder(Parser.parse(wasmBytes));
+            InputStream wasmFileStream = ChicoryHelloTest.class.getResourceAsStream(HelloTestParams.WASM_FILENAME);
+            var instanceBuilder = Instance.builder(Parser.parse(wasmFileStream));
             switch (mode) {
                 case INTERPRETER:
                     break;
@@ -65,7 +61,7 @@ public class ChicoryTest {
                     instanceBuilder.withMachineFactory(AotMachine::new);
                     break;
                 case PRECOMPILED_AOT:
-                    instanceBuilder.withMachineFactory(DemoMachineFactory::create);
+                    instanceBuilder.withMachineFactory(HelloMachineFactory::create);
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown Chicory mode " + mode);
@@ -80,20 +76,24 @@ public class ChicoryTest {
     }
 
     @Benchmark
+    /*
+     * Tests a simple HelloWorld Go function, including all of the calls necessary to obtain
+     * required functions.
+     */    
     public void chicoryTest(ChicoryFixture fixture, Blackhole blackhole) throws IOException {
         // automatically exported by TinyGo
         final ExportFunction malloc = fixture.instance.export("malloc");
         final ExportFunction free = fixture.instance.export("free");
-        final ExportFunction wasmFunc = fixture.instance.export(fixture.wasmFunctionName);
+        final ExportFunction wasmFunc = fixture.instance.export(HelloTestParams.WASM_FUNCTION);
         final Memory memory = fixture.instance.memory();
 
         // allocate {fixture.paramLen} bytes of memory, this returns a pointer to that memory
-        final int ptr = (int) malloc.apply(fixture.paramLen)[0];
+        final int ptr = (int) malloc.apply(HelloTestParams.paramLen)[0];
         // We can now write the message to the module's memory:
-        memory.writeString(ptr, fixture.param);
+        memory.writeString(ptr, HelloTestParams.TEST_PARAM);
 
         // Call the wasm function
-        final int result = (int) wasmFunc.apply(ptr, fixture.paramLen)[0];
+        final int result = (int) wasmFunc.apply(ptr, HelloTestParams.paramLen)[0];
         // free input string memory
         free.apply(ptr);
 
