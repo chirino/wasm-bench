@@ -1,21 +1,24 @@
 #!/bin/bash
 
 # build fat jar with benchmarks
-mvn clean package
+./mvnw clean verify
 
-# Run on GraalVM for JDK 21 with Graal JIT
+# Configure SDKMAN!
+# NOTE: turn off interactive mode, see https://sdkman.io/usage#configuration
+. ${HOME}/.sdkman/bin/sdkman-init.sh
+
+# Run on Oracle GraalVM with Oracle Graal JIT
+sdk install java 23.0.1-graal
+sdk use java 23.0.1-graal
 java -jar target/benchmarks.jar
 
-# Run with C2 (GraalVM) 
-java \
-    -Dpolyglot.engine.WarnInterpreterOnly=false \
-    -Dtruffle.UseFallbackRuntime=true \
-    -XX:-UseJVMCICompiler \
-    -jar target/benchmarks.jar 
+# Run on GraalVM CE with Graal CE JIT
+sdk install java 23.0.1-graalce
+sdk use java 23.0.1-graalce
+java -jar target/benchmarks.jar
 
-# Run with C2 (OpenJDK)
-# java \
-#     -Dpolyglot.engine.WarnInterpreterOnly=false \
-#     -Dtruffle.UseFallbackRuntime=true \
-#     -jar target/benchmarks.jar 
-    
+# Run on Eclipse Temurin with C2 JIT
+sdk install java 23.0.1-tem
+sdk use java 23.0.1-tem
+java -jar target/benchmarks.jar
+   

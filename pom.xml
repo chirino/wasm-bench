@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>graalwasm-starter-kit</artifactId>
+    <artifactId>wasm-bench</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
         <uberjar.name>benchmarks</uberjar.name>
         <exec.mainClass>garden.bots.starter.Main</exec.mainClass>
-        <graalvm.polyglot.version>24.0.2</graalvm.polyglot.version>
+        <graalvm.polyglot.version>24.1.1</graalvm.polyglot.version>
         <chicory.version>1.0.0-M1</chicory.version>
         <jmh.version>1.37</jmh.version>
         <maven.compiler.source>21</maven.compiler.source>
@@ -19,16 +19,16 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-      <dependencyManagement>
-        <dependencies>
-          <dependency>
-              <groupId>com.dylibso.chicory</groupId>
-              <artifactId>bom</artifactId>
-              <version>${chicory.version}</version>
-              <type>pom</type>
-              <scope>import</scope>
-          </dependency>
-        </dependencies>
+    <dependencyManagement>
+      <dependencies>
+        <dependency>
+          <groupId>com.dylibso.chicory</groupId>
+          <artifactId>bom</artifactId>
+          <version>${chicory.version}</version>
+          <type>pom</type>
+          <scope>import</scope>
+        </dependency>
+      </dependencies>
     </dependencyManagement>
 
     <dependencies>
@@ -44,7 +44,7 @@
             <version>${graalvm.polyglot.version}</version>
             <type>pom</type>
         </dependency>
-        
+
         <!-- Chicory -->
         <dependency>
             <groupId>com.dylibso.chicory</groupId>
@@ -84,24 +84,50 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.openjdk.jmh</groupId>
+              <artifactId>jmh-generator-annprocess</artifactId>
+              <version>${jmh.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>com.dylibso.chicory</groupId>
         <artifactId>aot-maven-plugin-experimental</artifactId>
         <version>${chicory.version}</version>
         <executions>
           <execution>
-            <id>demo-plugin</id>
+            <id>hello-plugin</id>
             <phase>generate-sources</phase>
             <goals>
               <goal>wasm-aot-gen</goal>
             </goals>
             <configuration>
-              <name>org.graalvm.benchmark.Demo</name>
-              <wasmFile>demo-plugin/demo.wasm</wasmFile>
+              <name>org.graalvm.benchmark.helloworld.Hello</name>
+              <wasmFile>${project.basedir}/src/main/resources/org/graalvm/benchmark/helloworld/hello.wasm</wasmFile>
             </configuration>
           </execution>
-        </executions>
+          <execution>
+            <id>photon-plugin</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>wasm-aot-gen</goal>
+            </goals>
+            <configuration>
+              <name>org.graalvm.benchmark.photon.Photon</name>
+              <wasmFile>${project.basedir}/src/main/resources/org/graalvm/benchmark/photon/bench.wasm</wasmFile>
+            </configuration>
+          </execution>
+        </executions> 
       </plugin>
-
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
@@ -135,6 +161,8 @@
             <configuration>
                 <finalName>${uberjar.name}</finalName>
                 <transformers>
+                    <!-- ServicesResourceTransformer is required for Graal languages to work in uber jar -->
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                     <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                         <mainClass>org.openjdk.jmh.Main</mainClass>
                     </transformer>
