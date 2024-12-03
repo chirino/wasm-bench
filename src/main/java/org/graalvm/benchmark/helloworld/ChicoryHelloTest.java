@@ -47,26 +47,32 @@ public class ChicoryHelloTest {
 
         @Setup(Level.Trial)
         public void doSetup() throws IOException {
-            final var logger = new SystemLogger();
             // create our instance of wasip1
-            wasi = new WasiPreview1(logger, WasiOptions.builder().build());
+            wasi = WasiPreview1.builder().build();
             final var imports = ImportValues.builder().addFunction(wasi.toHostFunctions()).build();
             // create the module and instantiate (the module) and connect our imports
             InputStream wasmFileStream = ChicoryHelloTest.class.getResourceAsStream(HelloTestParams.WASM_FILENAME);
-            var instanceBuilder = Instance.builder(Parser.parse(wasmFileStream));
             switch (mode) {
                 case INTERPRETER:
+                    instance = Instance.builder(Parser.parse(wasmFileStream))
+                            .withImportValues(imports)
+                            .build();
                     break;
                 case RUNTIME_AOT:
-                    instanceBuilder.withMachineFactory(AotMachine::new);
+                    instance = Instance.builder(Parser.parse(wasmFileStream))
+                            .withMachineFactory(AotMachine::new)
+                            .withImportValues(imports)
+                            .build();
                     break;
                 case PRECOMPILED_AOT:
-                    instanceBuilder.withMachineFactory(HelloMachineFactory::create);
+                    instance = Instance.builder(HelloModule.load())
+                            .withMachineFactory(HelloModule::create)
+                            .withImportValues(imports)
+                            .build();
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown Chicory mode " + mode);
             }
-            instance = instanceBuilder.withImportValues(imports).build();
         }
 
         @TearDown(Level.Trial)
