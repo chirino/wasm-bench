@@ -28,8 +28,8 @@ import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 
 
-@Warmup(iterations = 0)
-@Measurement(iterations = 1)
+@Warmup(iterations = 10)
+@Measurement(iterations = 10)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)
