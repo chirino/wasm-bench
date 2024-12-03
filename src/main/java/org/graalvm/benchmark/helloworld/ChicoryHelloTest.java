@@ -32,7 +32,6 @@ public class ChicoryHelloTest {
 
     @State(Scope.Benchmark)
     public static class ChicoryFixture {
-        public WasiPreview1 wasi;
         public Instance instance;
 
         @Param({
@@ -43,7 +42,7 @@ public class ChicoryHelloTest {
         private String mode;
 
         @Setup(Level.Trial)
-        public void doSetup() throws IOException {
+        public void doSetup() {
             // create the module and instantiate (the module) and connect our imports
             InputStream wasmFileStream = ChicoryHelloTest.class.getResourceAsStream(HelloTestParams.WASM_FILENAME);
             switch (mode) {
@@ -64,11 +63,6 @@ public class ChicoryHelloTest {
                 default:
                     throw new IllegalArgumentException("Unknown Chicory mode " + mode);
             }
-        }
-
-        @TearDown(Level.Trial)
-        public void doTeardown() {
-            wasi.close();
         }
     }
 
