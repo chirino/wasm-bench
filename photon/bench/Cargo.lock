@@ -52,7 +52,6 @@ name = "bench"
 version = "0.1.0"
 dependencies = [
  "photon-rs",
- "wasm-bindgen",
 ]
 
 [[package]]
