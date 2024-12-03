@@ -7,12 +7,9 @@
  package org.graalvm.benchmark.helloworld;
 
 import com.dylibso.chicory.experimental.aot.AotMachine;
-import com.dylibso.chicory.log.SystemLogger;
 import com.dylibso.chicory.runtime.ExportFunction;
-import com.dylibso.chicory.runtime.ImportValues;
 import com.dylibso.chicory.runtime.Instance;
 import com.dylibso.chicory.runtime.Memory;
-import com.dylibso.chicory.wasi.WasiOptions;
 import com.dylibso.chicory.wasi.WasiPreview1;
 import com.dylibso.chicory.wasm.Parser;
 import org.openjdk.jmh.annotations.*;
@@ -47,27 +44,21 @@ public class ChicoryHelloTest {
 
         @Setup(Level.Trial)
         public void doSetup() throws IOException {
-            // create our instance of wasip1
-            wasi = WasiPreview1.builder().build();
-            final var imports = ImportValues.builder().addFunction(wasi.toHostFunctions()).build();
             // create the module and instantiate (the module) and connect our imports
             InputStream wasmFileStream = ChicoryHelloTest.class.getResourceAsStream(HelloTestParams.WASM_FILENAME);
             switch (mode) {
                 case INTERPRETER:
                     instance = Instance.builder(Parser.parse(wasmFileStream))
-                            .withImportValues(imports)
                             .build();
                     break;
                 case RUNTIME_AOT:
                     instance = Instance.builder(Parser.parse(wasmFileStream))
                             .withMachineFactory(AotMachine::new)
-                            .withImportValues(imports)
                             .build();
                     break;
                 case PRECOMPILED_AOT:
                     instance = Instance.builder(HelloModule.load())
                             .withMachineFactory(HelloModule::create)
-                            .withImportValues(imports)
                             .build();
                     break;
                 default:

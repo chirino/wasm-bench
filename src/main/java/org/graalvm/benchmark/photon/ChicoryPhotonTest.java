@@ -26,11 +26,8 @@ import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
 import com.dylibso.chicory.experimental.aot.AotMachine;
-import com.dylibso.chicory.log.SystemLogger;
 import com.dylibso.chicory.runtime.ExportFunction;
-import com.dylibso.chicory.runtime.ImportValues;
 import com.dylibso.chicory.runtime.Instance;
-import com.dylibso.chicory.wasi.WasiOptions;
 import com.dylibso.chicory.wasi.WasiPreview1;
 import com.dylibso.chicory.wasm.Parser;
 
@@ -46,8 +43,7 @@ public class ChicoryPhotonTest {
         private static final String INTERPRETER = "interpreter";
         private static final String RUNTIME_AOT = "runtime-aot";
         private static final String PRECOMPILED_AOT = "precompiled-aot";
-        
-        private WasiPreview1 wasi;
+
         public ExportFunction benchmarkFn;
 
         @Param({
@@ -81,11 +77,6 @@ public class ChicoryPhotonTest {
                     throw new IllegalArgumentException("Unknown Chicory mode " + mode);
             }
             benchmarkFn = instance.export(PhotonTestParams.WASM_FUNCTION);
-        }
-
-        @TearDown(Level.Trial)
-        public void doTeardown() {
-            wasi.close();
         }
     }
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # build fat jar with benchmarks
-./mvnw clean verify
+./mvnw clean package
 
 # Configure SDKMAN!
 # NOTE: turn off interactive mode, see https://sdkman.io/usage#configuration

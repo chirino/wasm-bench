@@ -42,8 +42,7 @@ public class GraalWasmPhotonTest {
 
         @Setup(Level.Trial)
         public void doSetup() throws IOException {
-            final Context context = Context.newBuilder("wasm")
-                .option("wasm.Builtins", "wasi_snapshot_preview1")
+            context = Context.newBuilder("wasm")
                 .build();
             final Source source = Source.newBuilder("wasm", GraalWasmFixture.class.getResource(PhotonTestParams.WASM_FILENAME))
                 .name("photon")
