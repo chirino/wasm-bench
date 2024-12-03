@@ -27,8 +27,8 @@ import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
 
-@Warmup(iterations = 3)
-@Measurement(iterations = 3)
+@Warmup(iterations = 0)
+@Measurement(iterations = 1)
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)
@@ -42,6 +42,7 @@ public class GraalWasmHelloTest {
         @Setup(Level.Trial)
         public void doSetup() throws IOException {
             context = Context.newBuilder("wasm")
+                    .option("wasm.Builtins", "wasi_snapshot_preview1")
                     .build();
             final Source source = Source.newBuilder("wasm", GraalWasmFixture.class.getResource(HelloTestParams.WASM_FILENAME))
                 .name("hello")

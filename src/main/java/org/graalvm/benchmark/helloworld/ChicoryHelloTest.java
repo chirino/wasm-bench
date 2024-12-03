@@ -8,6 +8,7 @@
 
 import com.dylibso.chicory.experimental.aot.AotMachine;
 import com.dylibso.chicory.runtime.ExportFunction;
+import com.dylibso.chicory.runtime.ImportValues;
 import com.dylibso.chicory.runtime.Instance;
 import com.dylibso.chicory.runtime.Memory;
 import com.dylibso.chicory.wasi.WasiPreview1;
@@ -19,8 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
-@Warmup(iterations = 3)
-@Measurement(iterations = 3)
+@Warmup(iterations = 0)
+@Measurement(iterations = 1)
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)
@@ -32,6 +33,7 @@ public class ChicoryHelloTest {
 
     @State(Scope.Benchmark)
     public static class ChicoryFixture {
+        private WasiPreview1 wasi;
         public Instance instance;
 
         @Param({
@@ -44,26 +46,34 @@ public class ChicoryHelloTest {
         @Setup(Level.Trial)
         public void doSetup() {
             // create the module and instantiate (the module) and connect our imports
+            wasi = WasiPreview1.builder().build();
+            var imports = ImportValues.builder().addFunction(wasi.toHostFunctions()).build();
             InputStream wasmFileStream = ChicoryHelloTest.class.getResourceAsStream(HelloTestParams.WASM_FILENAME);
             switch (mode) {
                 case INTERPRETER:
                     instance = Instance.builder(Parser.parse(wasmFileStream))
+                            .withImportValues(imports)
                             .build();
                     break;
                 case RUNTIME_AOT:
                     instance = Instance.builder(Parser.parse(wasmFileStream))
                             .withMachineFactory(AotMachine::new)
+                            .withImportValues(imports)
                             .build();
                     break;
                 case PRECOMPILED_AOT:
                     instance = Instance.builder(HelloModule.load())
                             .withMachineFactory(HelloModule::create)
+                            .withImportValues(imports)
                             .build();
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown Chicory mode " + mode);
             }
         }
+
+        @TearDown(Level.Trial)
+        public void close() { wasi.close(); }
     }
 
     @Benchmark
