@@ -29,8 +29,8 @@ import com.dylibso.chicory.runtime.ExportFunction;
 import com.dylibso.chicory.runtime.Instance;
 import com.dylibso.chicory.wasm.Parser;
 
-@Warmup(iterations = 10)
-@Measurement(iterations = 10)
+@Warmup(iterations = 3)
+@Measurement(iterations = 3)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)

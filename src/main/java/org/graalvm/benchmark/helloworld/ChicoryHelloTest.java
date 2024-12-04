@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
-@Warmup(iterations = 10)
-@Measurement(iterations = 10)
+@Warmup(iterations = 3)
+@Measurement(iterations = 3)
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)

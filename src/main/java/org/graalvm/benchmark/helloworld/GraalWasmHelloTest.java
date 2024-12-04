@@ -27,8 +27,8 @@ import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
 
-@Warmup(iterations = 10)
-@Measurement(iterations = 10)
+@Warmup(iterations = 3)
+@Measurement(iterations = 3)
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)
