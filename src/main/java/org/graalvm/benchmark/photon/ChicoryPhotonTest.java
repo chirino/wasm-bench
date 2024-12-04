@@ -21,17 +21,12 @@ import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
 import com.dylibso.chicory.experimental.aot.AotMachine;
-import com.dylibso.chicory.log.SystemLogger;
 import com.dylibso.chicory.runtime.ExportFunction;
-import com.dylibso.chicory.runtime.ImportValues;
 import com.dylibso.chicory.runtime.Instance;
-import com.dylibso.chicory.wasi.WasiOptions;
-import com.dylibso.chicory.wasi.WasiPreview1;
 import com.dylibso.chicory.wasm.Parser;
 
 @Warmup(iterations = 3)
@@ -46,8 +41,7 @@ public class ChicoryPhotonTest {
         private static final String INTERPRETER = "interpreter";
         private static final String RUNTIME_AOT = "runtime-aot";
         private static final String PRECOMPILED_AOT = "precompiled-aot";
-        
-        private WasiPreview1 wasi;
+
         public ExportFunction benchmarkFn;
 
         @Param({
@@ -58,34 +52,29 @@ public class ChicoryPhotonTest {
         private String mode;
 
         @Setup(Level.Trial)
-        public void doSetup() throws IOException {
-            final var logger = new SystemLogger();
-            // create our instance of wasip1
-            wasi = new WasiPreview1(logger, WasiOptions.builder().build());
-            final var imports = ImportValues.builder().addFunction(wasi.toHostFunctions()).build();
+        public void doSetup() {
             // create the module and instantiate (the module) and connect our imports
             InputStream wasmFileStream = ChicoryPhotonTest.class.getResourceAsStream(PhotonTestParams.WASM_FILENAME);
-            var instanceBuilder = Instance.builder(Parser.parse(wasmFileStream));
+            Instance instance = null;;
            
             switch (mode) {
                 case INTERPRETER:
+                    instance = Instance.builder(Parser.parse(wasmFileStream)).build();
                     break;
                 case RUNTIME_AOT:
-                    instanceBuilder.withMachineFactory(AotMachine::new);
+                    instance = Instance.builder(Parser.parse(wasmFileStream))
+                            .withMachineFactory(AotMachine::new)
+                            .build();
                     break;
                 case PRECOMPILED_AOT:
-                    instanceBuilder.withMachineFactory(PhotonMachineFactory::create);
+                    instance = Instance.builder(PhotonModule.load())
+                            .withMachineFactory(PhotonModule::create)
+                            .build();
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown Chicory mode " + mode);
             }
-            var instance = instanceBuilder.withImportValues(imports).build();
             benchmarkFn = instance.export(PhotonTestParams.WASM_FUNCTION);
-        }
-
-        @TearDown(Level.Trial)
-        public void doTeardown() {
-            wasi.close();
         }
     }
 

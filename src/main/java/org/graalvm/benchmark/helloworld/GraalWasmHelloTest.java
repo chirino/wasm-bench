@@ -41,9 +41,9 @@ public class GraalWasmHelloTest {
 
         @Setup(Level.Trial)
         public void doSetup() throws IOException {
-            final Context.Builder contextBuilder = Context.newBuilder("wasm");
-            contextBuilder.option("wasm.Builtins", "wasi_snapshot_preview1");
-            context = contextBuilder.build();
+            context = Context.newBuilder("wasm")
+                    .option("wasm.Builtins", "wasi_snapshot_preview1")
+                    .build();
             final Source source = Source.newBuilder("wasm", GraalWasmFixture.class.getResource(HelloTestParams.WASM_FILENAME))
                 .name("hello")
                 .build();          
