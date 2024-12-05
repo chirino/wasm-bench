@@ -35,10 +35,9 @@ installed, edit ~/.skdman/etc/config to set the following:
 sdkman_auto_answer=true
 ```
 
-## Install Go/TinyGo
+## Go/TinyGo
 
-You need TinyGo installed to compile to WASM.
-* https://tinygo.org/getting-started/install/
+You need Docker installed as the build using a TinyGo container to compile Go to WASM.
 
 ## Install Rust
 
@@ -56,4 +55,7 @@ interaction issue with the Chicory AOT Maven plugin and `javac`.
 In the project root directory run `run.sh` to run all benchmarks. 
 
 This will run all the benchmarks in the suite three times, once on Oracle
-GraalVM, once on GraalVM Community Edition, and once on Eclipse Temurin.
+GraalVM, once on GraalVM Community Edition, and once on Eclipse Temurin (with
+Truffle JIT enabled for GraalWasm compilation support). An additional GraalWasm
+benchmark is run on Eclipse Temurin with Truffle JIT compilation disabled to
+force the use of the GraalWasm interpreter.
