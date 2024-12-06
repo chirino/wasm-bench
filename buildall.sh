@@ -10,4 +10,4 @@ cd photon
 ./build.sh
 cd ..
 
-./mvnw clean verify
+./mvnw clean package
