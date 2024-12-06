@@ -13,7 +13,7 @@ GraalWasm leverages the Graal JIT (Oracle or Community), when available, to comp
 applications into native machine code. When the Graal JIT is not available GraalWasm
 fall back to the interpreter. 
 
-Chicory provides and interpreter and an experimental ahead-of-time compilation
+Chicory provides an interpreter and experimental ahead-of-time compilation
 from WebAssembly to Java Bytecode.
 
 ## Acknowlegements
@@ -37,7 +37,7 @@ sdkman_auto_answer=true
 
 ## Go/TinyGo
 
-You need Docker installed as the build using a TinyGo container to compile Go to WASM.
+You need Docker installed as the build uses a TinyGo container to compile Go to WASM.
 
 ## Install Rust
 
