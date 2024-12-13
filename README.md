@@ -35,13 +35,10 @@ installed, edit ~/.skdman/etc/config to set the following:
 sdkman_auto_answer=true
 ```
 
-## Go/TinyGo
+## Container Runtime
 
-You need Docker installed as the build uses a TinyGo container to compile Go to WASM.
-
-## Install Rust
-
-* See https://www.rust-lang.org/tools/install
+You need Docker/Podman installed as both Go and Rust builds are done in
+container to avoid having to install the toolchains on the benchmark machine.
 
 # Build
 
